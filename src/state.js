@@ -12,6 +12,8 @@ const markerCluster = L.markerClusterGroup({
   disableClusteringAtZoom: 17
 });
 
+let enlargedMarkers = new Set();
+
 function addMarker(marker) {
   allMarkers.push(marker);
 }
@@ -57,8 +59,6 @@ function resetMarker(marker) {
   }));
   enlargedMarkers.delete(marker);
 }
-
-let enlargedMarkers = new Set();
 
 function resetAllEnlargedMarkers() {
   enlargedMarkers.forEach(m => resetMarker(m));
