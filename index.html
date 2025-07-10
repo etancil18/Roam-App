@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LocalLoop MVP Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { height: 100vh; width: 100vw; }
+    #details {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      width: 300px; background: white; padding: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      font-family: sans-serif; font-size: 14px;
+      display: none; z-index: 1000;
+    }
+    #details button {
+      display: block; margin-top: 5px; background: #ccc;
+      border: none; padding: 5px; cursor: pointer;
+    }
+    #vibeFilter, #map-search, #clearRoute, #removeLastPoint {
+      position: absolute; z-index: 1000; font-size: 14px; padding: 5px;
+    }
+    #map-search { top: 10px; left: 50px; width: 250px; }
+    #vibeFilter { top: 10px; left: 330px; }
+    #removeLastPoint { top: 10px; right: 450px; }
+    #clearRoute { top: 10px; right: 350px; }
+  </style>
+</head>
+<body>
+
+<input id="map-search" type="text" placeholder="Search by name or vibe..." />
+<select id="vibeFilter">
+  <option value="">Show All</option>
+  <option value="rooftop">Rooftop</option>
+  <option value="jazz">Jazz</option>
+  <option value="artsy">Artsy</option>
+  <option value="coffee">Coffee</option>
+  <option value="hip">Hip</option>
+  <option value="date night">Date Night</option>
+  <option value="nightlife">Nightlife</option>
+  <option value="hidden gem">Hidden Gem</option>
+  <option value="wine">Wine</option>
+</select>
+<button id="removeLastPoint">Remove Last Point</button>
+<button id="clearRoute">Clear Route</button>
+
+<div id="map"></div>
+<div id="details"><strong>Click a pin to see details</strong></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<script>
+const map = L.map('map').setView([40.72, -73.98], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const markerCluster = L.markerClusterGroup({
+  spiderfyOnMaxZoom: true,
+  showCoverageOnHover: false,
+  zoomToBoundsOnClick: true,
+  maxClusterRadius: 40,
+  disableClusteringAtZoom: 17
+});
+map.addLayer(markerCluster);
+
+const allMarkers = [];
+let selectedPoints = [];
+let currentRoute = null;
+
+const vibeMap = {
+  jazz: ["jazz"],
+  artsy: ["art", "artsy", "gallery", "museum"],
+  coffee: ["coffee", "café", "matcha"],
+  hip: ["hip", "trendy", "dj", "brunch"],
+  "date night": ["date", "intimate", "date night", "charming"],
+  nightlife: ["nightlife", "dance", "social", "dj", "speakeasy"],
+  "hidden gem": ["hidden", "hidden gem", "speakeasy", "underground"],
+  wine: ["wine", "natural wine", "craft wine"],
+  rooftop: ["rooftop", "scenic", "views", "skyline"]
+};
+
+fetch('events.json')
+  .then(res => res.json())
+  .then(events => {
+    events.forEach(ev => {
+      const marker = L.marker([ev.lat, ev.lon], {
+        icon: L.divIcon({
+          className: '',
+          html: '📍',
+          iconSize: [50, 50],
+          iconAnchor: [5, 5]
+        })
+      });
+
+      marker.vibe = ev.vibe.toLowerCase();
+      marker.name = ev.name.toLowerCase();
+
+      marker.on('click', () => {
+        showDetails(ev, marker.getLatLng());
+      });
+
+      allMarkers.push(marker);
+      markerCluster.addLayer(marker);
+    });
+  });
+
+function showDetails(ev, latlng) {
+  const details = document.getElementById('details');
+  const suggestions = findNearbySimilar(latlng, ev.vibe.toLowerCase(), 350);
+
+  let suggestionHtml = '';
+  if (suggestions.length > 0) {
+    suggestionHtml = `<strong>Also could be the move:</strong><ul>` +
+      suggestions.map(s => `<li>${s.name}</li>`).join('') + `</ul>`;
+  } else {
+    suggestionHtml = '<em>No similar spots nearby</em>';
+  }
+
+  details.innerHTML = `
+    <strong>${ev.name}</strong><br>
+    Vibe: ${ev.vibe}<br>
+    <a href="${ev.link}" target="_blank">View More</a><br>
+    <button id="addToRoute">Add to Route</button>
+    <button id="closeDetails">Close</button>
+    ${suggestionHtml}
+  `;
+  details.style.display = 'block';
+
+  document.getElementById('addToRoute').addEventListener('click', () => {
+    addPointToRoute(latlng);
+  });
+
+  document.getElementById('closeDetails').addEventListener('click', () => {
+    details.style.display = 'none';
+  });
+}
+
+function findNearbySimilar(latlng, vibeText, radius = 350) {
+  const vibeTags = vibeText.split(',').map(v => v.trim());
+  return allMarkers.filter(marker => {
+    const distance = latlng.distanceTo(marker.getLatLng());
+    const markerVibe = marker.vibe;
+    const vibeMatch = vibeTags.some(tag => markerVibe.includes(tag));
+    return distance <= radius && vibeMatch && !latlng.equals(marker.getLatLng());
+  }).slice(0, 3);
+}
+
+function addPointToRoute(latlng) {
+  if (selectedPoints.length >= 5) {
+    alert('Maximum 5 points allowed. Clear or remove a point to add new.');
+    return;
+  }
+
+  selectedPoints.push(latlng);
+  updateRoute();
+}
+
+function updateRoute() {
+  if (currentRoute) {
+    map.removeControl(currentRoute);
+  }
+
+  if (selectedPoints.length >= 2) {
+    currentRoute = L.Routing.control({
+      waypoints: selectedPoints,
+      routeWhileDragging: false
+    }).addTo(map);
+  }
+}
+
+function applyFilters() {
+  const vibe = document.getElementById('vibeFilter').value.toLowerCase();
+  const query = document.getElementById('map-search').value.toLowerCase();
+
+  markerCluster.clearLayers();
+
+  allMarkers.forEach(marker => {
+    let vibeMatch = !vibe;
+    if (vibe && vibeMap[vibe]) {
+      vibeMatch = vibeMap[vibe].some(keyword => marker.vibe.includes(keyword));
+    }
+
+    const searchMatch = !query || marker.name.includes(query) || marker.vibe.includes(query);
+
+    if (vibeMatch && searchMatch) {
+      markerCluster.addLayer(marker);
+    }
+  });
+}
+
+document.getElementById('vibeFilter').addEventListener('change', applyFilters);
+document.getElementById('map-search').addEventListener('input', applyFilters);
+
+document.getElementById('clearRoute').addEventListener('click', () => {
+  if (currentRoute) {
+    map.removeControl(currentRoute);
+    currentRoute = null;
+  }
+  selectedPoints = [];
+});
+
+document.getElementById('removeLastPoint').addEventListener('click', () => {
+  if (selectedPoints.length === 0) {
+    alert('No points to remove.');
+    return;
+  }
+  selectedPoints.pop();
+  updateRoute();
+});
+</script>
+</body>
+</html>
