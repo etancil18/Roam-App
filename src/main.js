@@ -2,11 +2,11 @@
 
 import './style.css';
 import './map.js';
+
 import { applyFilters } from './filters.js';
 import { loadEventData } from './data.js';
 import { generateRoute, clearRoute, removeLastPoint } from './routing.js';
-
-import { getSelectedPoints } from './state.js';
+import { getSelectedPoints, markerCluster } from './state.js';
 
 const isSharedCrawl = new URLSearchParams(window.location.search).has('crawl');
 
@@ -15,7 +15,7 @@ function parseSharedCrawl() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadEventData(isSharedCrawl, parseSharedCrawl, getSelectedPoints(), window.markerCluster);
+  loadEventData(isSharedCrawl, parseSharedCrawl, getSelectedPoints(), markerCluster);
 
   document.getElementById('map-search').addEventListener('input', applyFilters);
   document.getElementById('vibeFilter').addEventListener('change', applyFilters);
