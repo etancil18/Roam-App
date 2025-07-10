@@ -1,13 +1,9 @@
 // src/map.js
 
-import { updateRoute, generateShareURL } from './routing.js';
+
 import { showDetails, enlargeMarker, resetAllEnlargedMarkers } from './ui.js';
 import {
-  getSelectedPoints,
-  setSelectedPoints,
-  setCurrentRoute,
   addMarker,
-  getAllMarkers,
   markerCluster,
   enlargeMarker,
   resetAllEnlargedMarkers
