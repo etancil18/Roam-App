@@ -1,29 +1,12 @@
 // src/ui.js
 
 import { addPointToRoute, generateShareURL, updateRoute } from './routing.js';
-import { getSelectedPoints, getAllMarkers } from './state.js';
-
-function enlargeMarker(marker) {
-  marker.setIcon(L.icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-  }));
-}
-
-function resetAllEnlargedMarkers(markers) {
-  markers.forEach(marker => {
-    marker.setIcon(L.divIcon({
-      className: 'custom-blue-icon',
-      html: '',
-      iconSize: [18, 18],
-      iconAnchor: [9, 18]
-    }));
-  });
-}
+import {
+  getSelectedPoints,
+  getAllMarkers,
+  enlargeMarker,
+  resetAllEnlargedMarkers
+} from './state.js';
 
 function showDetails(ev, latlng) {
   const details = document.getElementById('details');
