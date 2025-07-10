@@ -2,7 +2,7 @@
 
 import { map } from './map.js';
 import { setCurrentRoute, getSelectedPoints, setSelectedPoints, getAllMarkers } from './state.js';
-import { enlargeMarker, resetAllEnlargedMarkers } from './ui.js';
+import { enlargeMarker, resetAllEnlargedMarkers } from './state.js';
 
 let currentRoute = null;
 
