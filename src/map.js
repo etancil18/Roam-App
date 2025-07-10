@@ -2,7 +2,16 @@
 
 import { updateRoute, generateShareURL } from './routing.js';
 import { showDetails, enlargeMarker, resetAllEnlargedMarkers } from './ui.js';
-import { selectedPoints, setCurrentRoute, addMarker, getAllMarkers, markerCluster } from './state.js';
+import {
+  getSelectedPoints,
+  setSelectedPoints,
+  setCurrentRoute,
+  addMarker,
+  getAllMarkers,
+  markerCluster,
+  enlargeMarker,
+  resetAllEnlargedMarkers
+} from './state.js';
 
 const map = L.map('map').setView([40.72, -73.98], 12);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
