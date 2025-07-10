@@ -72,6 +72,7 @@ export {
   setSelectedPoints,
   getCurrentRoute,
   setCurrentRoute,
+    selectedPoints,
   enlargeMarker,
   resetMarker,
   resetAllEnlargedMarkers
