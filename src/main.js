@@ -1,24 +1,27 @@
-import './style.css'
-import javascriptLogo from './javascript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.js'
+// src/main.js
 
-document.querySelector('#app').innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-      <img src="${javascriptLogo}" class="logo vanilla" alt="JavaScript logo" />
-    </a>
-    <h1>Hello Vite!</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite logo to learn more
-    </p>
-  </div>
-`
+import './style.css';
+import './map.js';
+import { applyFilters } from './filters.js';
+import { loadEventData } from './data.js';
+import { generateRoute, clearRoute, removeLastPoint } from './routing.js';
 
-setupCounter(document.querySelector('#counter'))
+import { getSelectedPoints } from './state.js';
+
+const isSharedCrawl = new URLSearchParams(window.location.search).has('crawl');
+
+function parseSharedCrawl() {
+  // Placeholder – implement actual logic here if necessary.
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadEventData(isSharedCrawl, parseSharedCrawl, getSelectedPoints(), window.markerCluster);
+
+  document.getElementById('map-search').addEventListener('input', applyFilters);
+  document.getElementById('vibeFilter').addEventListener('change', applyFilters);
+  document.getElementById('priceFilter').addEventListener('change', applyFilters);
+
+  document.getElementById('generateRoute').addEventListener('click', generateRoute);
+  document.getElementById('removeLastPoint').addEventListener('click', removeLastPoint);
+  document.getElementById('clearRoute').addEventListener('click', clearRoute);
+});
