@@ -1,6 +1,6 @@
 // src/ui.js
 
-import { addPointToRoute, generateShareURL, updateRoute } from './routing.js';
+import { addPointToRoute, generateShareURL } from './routing.js';
 import {
   getSelectedPoints,
   getAllMarkers,
